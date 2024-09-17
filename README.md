@@ -101,6 +101,29 @@ sudo ipset del ufw-blocklist-ipsum a.b.c.d
 sudo ipset flush ufw-blocklist-ipsum
 ```
 
+## 自动更新黑名单
+
+显然，手工更新黑名单是不现实的。效率很低。如果我们直接消费一些成熟的黑名单 IP 地址库，那么我们可以自动更新黑名单。幸运的是，我已经帮你做好了。
+
+```bash
+raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/auto-blacklist-update"
+wget -O auto-blacklist-update $raw
+sudo mv auto-blacklist-update /etc/cron.daily/auto-blacklist-update
+sudo chown root:root /etc/cron.daily/auto-blacklist-update
+sudo chmod 755 /etc/cron.daily/auto-blacklist-update
+```
+
+在上面的命令运行完成后，会创建文件 `/etc/cron.daily/auto-blacklist-update`，这个文件会每天运行一次，其功能是自动更新黑名单。
+
+注意：它只会向黑名单中添加新的 IP 地址，不会删除旧的 IP 地址和你手工添加的 IP 地址。
+
+在默认情况下，它会从以下地址获取黑名单：
+
+* https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt
+* https://raw.githubusercontent.com/Anduin2017/ShameList-HackersIPs/master/list
+
+你可以编辑 `/etc/cron.daily/auto-blacklist-update` 文件，修改这些地址。
+
 ## 高级用法
 
 通过 ufw 的启用、禁用和重载选项，自动启动和停止黑名单。参考 [Ubuntu UFW wiki 页面](https://help.ubuntu.com/community/UFW) 获取 ufw 的使用帮助。
