@@ -39,23 +39,19 @@ sudo chmod 750 /etc/ufw/after.init
 
 ## 启动 ufw-blocklist
 
-从 [IPsum](https://github.com/stamparm/ipsum) 下载初始 IP 黑名单:
-
-```bash
-curl -sS -f --compressed -o ipsum.4.txt 'https://raw.githubusercontent.com/stamparm/ipsum/master/levels/4.txt'
-sudo chmod 640 ipsum.4.txt
-sudo cp ipsum.4.txt /etc/ipsum.4.txt
-```
-
-当然，上面的过程是可选的。如果你不想下载初始的 IP 黑名单，你可以手工创建 `/etc/ipsum.4.txt` 文件，然后添加你自己的 IP 地址。
-
 启动 ufw-blocklist
 
 ```bash
 sudo /etc/ufw/after.init start
 ```
 
-* start 命令只需运行一次。它会重置 `ipset`，然后阅读 `/etc/ipsum.4.txt` 文件中的 IP 地址，并将它们添加到 ipset 中。未来如果需要更新黑名单，只需直接修改 `ipset`。
+* start 命令只需运行一次。它会重置 `ipset`，并将 `ipset` 中的黑名单 IP 地址加入到 ufw 规则中。
+
+在默认情况下，刚刚启动，是不会有任何黑名单的。你可以使用下面的命令来查看黑名单的状态：
+
+```bash
+sudo ipset list ufw-blocklist-ipsum
+```
 
 ## 手工管理黑名单
 
