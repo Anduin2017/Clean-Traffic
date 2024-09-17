@@ -171,7 +171,24 @@ You can edit the `/etc/cron.daily/auto-blacklist-update` file to modify these so
 
 ## Advanced Usage
 
-Use ufw's enable, disable, and reload options to automatically start and stop the blacklist. Refer to the [Ubuntu UFW wiki page](https://help.ubuntu.com/community/UFW) for assistance with ufw usage.
+To view the `iptables` rules that are created by the `after.init` script, use the following command:
+
+```bash
+sudo iptables -L INPUT -v --line-numbers
+```
+
+Output may look like this: (I also use crowdsec-blacklists, which is not included in the default installation)
+
+| num | target                   | prot | opt | source   | destination | match-set                         |
+|-----|--------------------------|------|-----|----------|-------------|-----------------------------------|
+| 1   | ufw-blocklist-input      | all  | --  | anywhere | anywhere    | match-set ufw-blocklist-ipsum src |
+| 2   | DROP                     | all  | --  | anywhere | anywhere    | match-set crowdsec-blacklists src |
+| 3   | ufw-before-logging-input | all  | --  | anywhere | anywhere    |                                   |
+| 4   | ufw-before-input         | all  | --  | anywhere | anywhere    |                                   |
+| 5   | ufw-after-input          | all  | --  | anywhere | anywhere    |                                   |
+| 6   | ufw-after-logging-input  | all  | --  | anywhere | anywhere    |                                   |
+| 7   | ufw-reject-input         | all  | --  | anywhere | anywhere    |                                   |
+| 8   | ufw-track-input          | all  | --  | anywhere | anywhere    |                                   |
 
 `after.init` has two commands: status and flush-all.
 
