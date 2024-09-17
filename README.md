@@ -19,7 +19,7 @@
 
 ```bash
 sudo apt update
-sudo apt install ipset
+sudo apt install ipset ufw -y
 
 echo "Installing Safe Server"
 raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init"
@@ -49,7 +49,6 @@ echo "blacklist updated"
 echo "Safe Server status"
 sudo /etc/ufw/after.init status
 ```
-
 
 ## 安装
 
