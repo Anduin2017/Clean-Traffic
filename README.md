@@ -115,6 +115,12 @@ sudo chmod 755 /etc/cron.daily/auto-blacklist-update
 
 在上面的命令运行完成后，会创建文件 `/etc/cron.daily/auto-blacklist-update`，这个文件会每天运行一次，其功能是自动更新黑名单。
 
+当然，如果你想现在手动更新黑名单，可以运行以下命令：
+
+```bash
+sudo /etc/cron.daily/auto-blacklist-update
+```
+
 注意：它只会向黑名单中添加新的 IP 地址，不会删除旧的 IP 地址和你手工添加的 IP 地址。
 
 在默认情况下，它会从以下地址获取黑名单：
