@@ -1,6 +1,6 @@
-# ufw-blocklist
+# Safe Server
 
-为 ufw 添加一个 IP 黑名单，该工具是 Ubuntu 的简易防火墙
+这个项目通过为 ufw 添加一个 IP 黑名单，（ ufw 工具是一个简单的防火墙配置工具，它是 iptables 的前端）来保护你的 Ubuntu 服务器。
 
 * 完全集成到纯 Ubuntu 的 ufw 中
 * 阻止入站、出站和转发的数据包
@@ -36,6 +36,7 @@ wget -O after.init $raw
 sudo mv after.init /etc/ufw/after.init
 sudo chown root:root /etc/ufw/after.init
 sudo chmod 750 /etc/ufw/after.init
+echo "Safe Server installed"
 ```
 
 ## 启动 ufw-blocklist
