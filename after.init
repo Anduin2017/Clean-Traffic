@@ -117,7 +117,7 @@ stop)
     ;;
 status)
     # display details of the ipset
-    $IPSET_EXE list "$ipsetname" -t
+    $IPSET_EXE list "$ipsetname" -t || echo "ipset $ipsetname not found. This is because the blocklist is not active."
     # show iptables hit/byte counts
     iptables -L -nvx | grep "$ipsetname" | grep 'match-set'
     # show the last 100 lines from the logs

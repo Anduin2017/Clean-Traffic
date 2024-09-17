@@ -18,6 +18,7 @@
 安装 ipset 包
 
 ```bash
+sudo apt update
 sudo apt install ipset
 ```
 
@@ -46,6 +47,12 @@ sudo /etc/ufw/after.init start
 ```
 
 * start 命令只需运行一次。它会重置 `ipset`，并将 `ipset` 中的黑名单 IP 地址加入到 ufw 规则中。
+
+停止 ufw-blocklist
+
+```bash
+sudo /etc/ufw/after.init stop
+```
 
 在默认情况下，刚刚启动，是不会有任何黑名单的。你可以使用下面的命令来查看黑名单的状态：
 
