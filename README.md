@@ -169,6 +169,10 @@ By default, it fetches blacklists from the following sources:
 
 You can edit the `/etc/cron.daily/auto-blacklist-update` file to modify these sources.
 
+FAQ: When will the automatic blacklist update run?
+
+The cron.daily directory contains scripts that are executed once a day. The exact time of execution is determined by the system. You can check the `/etc/crontab` file to see when the cron.daily scripts are scheduled to run.
+
 ## Advanced Usage
 
 To view the `iptables` rules that are created by the `after.init` script, use the following command:
