@@ -13,6 +13,44 @@
 
 **该黑名单在拦截大量不请自来的流量方面非常有效。** 它设计得非常轻量化，并且无需维护，因为其初始目标平台是一块作为家庭互联网网关运行的单板计算机。安装后，不会再对存储系统进行写入操作，以保护固态存储。我强烈推荐任何拥有公共 IP 地址或通过端口转发直接暴露在互联网上的 Ubuntu 主机使用它。
 
+## 傻瓜化安装
+
+如果你真的很懒，而不想看这个文档，可以直接运行以下命令。这会原地提升你的服务器安全性。（注意它会改变你的防火墙规则）
+
+```bash
+sudo apt update
+sudo apt install ipset
+
+echo "Installing Safe Server"
+raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init"
+wget -O after.init $raw
+sudo cp /etc/ufw/after.init /etc/ufw/after.init.orig
+sudo mv after.init /etc/ufw/after.init
+sudo chown root:root /etc/ufw/after.init
+sudo chmod 750 /etc/ufw/after.init
+echo "Safe Server installed"
+
+echo "Starting Safe Server"
+sudo /etc/ufw/after.init start
+echo "Safe Server started"
+
+echo "Installing auto-blacklist-update"
+raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/auto-blacklist-update"
+wget -O auto-blacklist-update $raw
+sudo mv auto-blacklist-update /etc/cron.daily/auto-blacklist-update
+sudo chown root:root /etc/cron.daily/auto-blacklist-update
+sudo chmod 755 /etc/cron.daily/auto-blacklist-update
+echo "auto-blacklist-update installed"
+
+echo "Updating blacklist.."
+sudo /etc/cron.daily/auto-blacklist-update
+echo "blacklist updated"
+
+echo "Safe Server status"
+sudo /etc/ufw/after.init status
+```
+
+
 ## 安装
 
 安装 ipset 包
