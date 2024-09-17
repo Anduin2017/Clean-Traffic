@@ -30,9 +30,9 @@ sudo cp /etc/ufw/after.init /etc/ufw/after.init.orig
 安装 ufw-blocklist 文件
 
 ```bash
-git clone https://github.com/poddmo/ufw-blocklist.git
-cd ufw-blocklist
-sudo cp after.init /etc/ufw/after.init
+raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init"
+wget -O after.init $raw
+sudo mv after.init /etc/ufw/after.init
 sudo chown root:root /etc/ufw/after.init
 sudo chmod 750 /etc/ufw/after.init
 ```
