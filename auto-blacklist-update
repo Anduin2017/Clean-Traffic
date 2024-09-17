@@ -43,49 +43,61 @@ function judge() {
   fi
 }
 
-ipsumurl='https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt'
+# List of URLs to fetch IP lists
+ip_urls=(
+  'https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt'
+  'https://raw.githubusercontent.com/Anduin2017/ShameList-HackersIPs/master/list'
+  # Add more URLs as needed
+)
+
 ipsetname=ufw-blocklist-ipsum
 ipset_exe=/usr/sbin/ipset
+tmpfile=$(mktemp)
 
+# Ensure the ipset exists
 print_ok "Ensure $ipsetname exists..."
 $ipset_exe -t list "$ipsetname" &>/dev/null
 judge "Check if ipsetname exists"
 
-print_ok "Downloading the latest list..."
-rawlist=$(curl -sS -f --compressed "$ipsumurl" 2>/dev/null)
-judge "Download the latest list"
+# Download and concatenate the lists
+print_ok "Downloading IP lists and concatenating..."
+for url in "${ip_urls[@]}"; do
+  curl -sS -f --compressed "$url" >> "$tmpfile" || print_warn "Failed to download from $url"
+done
+judge "Download and concatenate lists"
+
+# Remove duplicates
+print_ok "Removing duplicates..."
+rawlist=$(sort -u "$tmpfile")
+judge "Remove duplicates"
+
+print_ok "Removing temporary file..."
+rm -f "$tmpfile"
+judge "Remove temporary file"
 
 print_ok "Parsing the list..."
 declare -a scrublist
 readarray -t scrublist < <(echo "$rawlist")
 judge "Parse the list"
 
-## create a temporary ipset
 print_ok "Create temporary ipset..."
 tmpsetname="$(mktemp -u | cut -f2 -d'.')-tmp"
 $ipset_exe -q create "$tmpsetname" hash:net
-judge "create temporary ipset"
+judge "Create temporary ipset"
 
-## loop through each IP address in the scrublist array and add it to the temporary ipset
 print_ok "Adding IPs to temporary ipset..."
 cnt=0
-for i in "${scrublist[@]}"
-do
-	$ipset_exe add "$tmpsetname" $i
-  if [[ 0 -eq $? ]]; then
-    print_ok "Added $i to $tmpsetname"
-    cnt=$((cnt+1))
-  else
-    print_warn "Failed to add $i to $tmpsetname"
-  fi
+for i in "${scrublist[@]}"; do
+  $ipset_exe add "$tmpsetname" "$i" && print_ok "Added $i to $tmpsetname" || print_warn "Failed to add $i to $tmpsetname"
+  cnt=$((cnt+1))
 done
 
 print_ok "Swap temporary ipset with $ipsetname..."
 $ipset_exe swap "$tmpsetname" "$ipsetname"
-judge "swap temporary ipset with $ipsetname"
+judge "Swap temporary ipset with $ipsetname"
 
 print_ok "Destroy temporary ipset..."
 $ipset_exe -q destroy "$tmpsetname"
-judge "destroy temporary ipset"
+judge "Destroy temporary ipset"
 
-print_ok "finished updating $ipsetname. New count: $cnt"
+print_ok "Finished updating $ipsetname. New count: $cnt"
