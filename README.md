@@ -39,27 +39,29 @@ sudo chmod 750 /etc/ufw/after.init
 echo "Safe Server installed"
 ```
 
-## 启动 ufw-blocklist
+上面的命令是幂等的，可以重复运行。之后运行它的效果是更新 safe-server。
 
-启动 ufw-blocklist
+## 启动 Safe Server
+
+启动 Safe Server:
 
 ```bash
 sudo /etc/ufw/after.init start
 ```
 
-* start 命令只需运行一次。它会重置 `ipset`，并将 `ipset` 中的黑名单 IP 地址加入到 ufw 规则中。
-
-停止 ufw-blocklist
+停止 Safe Server:
 
 ```bash
 sudo /etc/ufw/after.init stop
 ```
 
-在默认情况下，刚刚启动，是不会有任何黑名单的。你可以使用下面的命令来查看黑名单的状态：
+查看 Safe Server 的状态:
 
 ```bash
-sudo ipset list ufw-blocklist-ipsum
+sudo /etc/ufw/after.init status
 ```
+
+在默认情况下，刚刚安装完成后启动，是不会有任何黑名单的。其行为是不会阻止任何流量的。
 
 ## 手工管理黑名单
 
@@ -69,7 +71,7 @@ sudo ipset list ufw-blocklist-ipsum
 sudo ipset list ufw-blocklist-ipsum
 ```
 
-为了避免大量输出，可以使用 terse 选项：
+为了避免大量输出，可以使用 terse 选项，只查看黑名单中的 IP 地址数量：
 
 ```bash
 sudo ipset list ufw-blocklist-ipsum -terse
@@ -99,7 +101,7 @@ sudo ipset del ufw-blocklist-ipsum a.b.c.d
 sudo ipset flush ufw-blocklist-ipsum
 ```
 
-## 调试
+## 高级用法
 
 通过 ufw 的启用、禁用和重载选项，自动启动和停止黑名单。参考 [Ubuntu UFW wiki 页面](https://help.ubuntu.com/community/UFW) 获取 ufw 的使用帮助。
 
