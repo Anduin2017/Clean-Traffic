@@ -1,0 +1,91 @@
+#!/bin/bash
+
+#==========================
+# Set up the environment
+#==========================
+set -e                  # exit on error
+set -o pipefail         # exit on pipeline error
+set -u                  # treat unset variable as error
+
+export LC_ALL=C
+export LANG=en_US.UTF-8
+export DEBIAN_FRONTEND=noninteractive
+
+Green="\033[32m"
+Red="\033[31m"
+Yellow="\033[33m"
+Blue="\033[36m"
+Font="\033[0m"
+GreenBG="\033[42;37m"
+RedBG="\033[41;37m"
+OK="${Green}[  OK  ]${Font}"
+ERROR="${Red}[FAILED]${Font}"
+WARNING="${Yellow}[ WARN ]${Font}"
+
+function print_ok() {
+  echo -e "${OK} ${Blue} $1 ${Font}"
+}
+
+function print_error() {
+  echo -e "${ERROR} ${Red} $1 ${Font}"
+}
+
+function print_warn() {
+  echo -e "${WARNING} ${Yellow} $1 ${Font}"
+}
+
+function judge() {
+  if [[ 0 -eq $? ]]; then
+    print_ok "$1 succeeded"
+  else
+    print_error "$1 failed"
+    exit 1
+  fi
+}
+
+ipsumurl='https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt'
+ipsetname=ufw-blocklist-ipsum
+ipset_exe=/usr/sbin/ipset
+
+print_ok "Ensure $ipsetname exists..."
+$ipset_exe -t list "$ipsetname" &>/dev/null
+judge "Check if ipsetname exists"
+
+print_ok "Downloading the latest list..."
+rawlist=$(curl -sS -f --compressed "$ipsumurl" 2>/dev/null)
+judge "Download the latest list"
+
+print_ok "Parsing the list..."
+declare -a scrublist
+readarray -t scrublist < <(echo "$rawlist")
+judge "Parse the list"
+
+## create a temporary ipset
+print_ok "Create temporary ipset..."
+tmpsetname="$(mktemp -u | cut -f2 -d'.')-tmp"
+$ipset_exe -q create "$tmpsetname" hash:net
+judge "create temporary ipset"
+
+## loop through each IP address in the scrublist array and add it to the temporary ipset
+print_ok "Adding IPs to temporary ipset..."
+cnt=0
+for i in "${scrublist[@]}"
+do
+	$ipset_exe add "$tmpsetname" $i
+  if [[ 0 -eq $? ]]; then
+    print_ok "Added $i to $tmpsetname"
+    cnt=$((cnt+1))
+  else
+    print_warn "Failed to add $i to $tmpsetname"
+  fi
+done
+
+print_ok "Swap temporary ipset with $ipsetname..."
+$ipset_exe swap "$tmpsetname" "$ipsetname"
+judge "swap temporary ipset with $ipsetname"
+
+print_ok "Destroy temporary ipset..."
+$ipset_exe -q destroy "$tmpsetname"
+judge "destroy temporary ipset"
+
+print_ok "finished updating $ipsetname. New count: $cnt"

@@ -142,8 +142,8 @@ status)
     $IPSET_EXE list "$ipsetname" -t
     # show iptables hit/byte counts
     iptables -L -nvx | grep "$ipsetname" | grep 'match-set'
-    # show the last 10 lines from the logs
-    journalctl | grep -i blocklist | tail
+    # show the last 100 lines from the logs
+    journalctl | grep -i blocklist | tail -n 100
     ;;
 flush-all)
     # flush sets created above. Use /etc/cron.daily/ufw-blocklist-ipsum to repopulate
