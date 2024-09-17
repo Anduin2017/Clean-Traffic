@@ -101,6 +101,8 @@ sudo ipset del ufw-blocklist-ipsum a.b.c.d
 sudo ipset flush ufw-blocklist-ipsum
 ```
 
+注意: 黑名单只存储在 `ipset` 中，也就是内存中。`sudo ufw reload` 会重置黑名单！重启服务器也会重置黑名单！
+
 ## 自动更新黑名单
 
 显然，手工更新黑名单是不现实的。效率很低。如果我们直接消费一些成熟的黑名单 IP 地址库，那么我们可以自动更新黑名单。幸运的是，我已经帮你做好了。
