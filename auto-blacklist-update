@@ -63,7 +63,9 @@ judge "Check if ipsetname exists"
 # Download and concatenate the lists
 print_ok "Downloading IP lists and concatenating..."
 for url in "${ip_urls[@]}"; do
+  print_ok "Downloading from $url..."
   curl -sS -f --compressed "$url" >> "$tmpfile" || print_warn "Failed to download from $url"
+  judge "Download from $url"
 done
 judge "Download and concatenate lists"
 
