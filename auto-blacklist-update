@@ -47,6 +47,7 @@ function judge() {
 ip_urls=(
   'https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt'
   'https://gitlab.aiursoft.cn/anduin/ShameList-HackersIPs/-/raw/master/list'
+  'https://iplists.firehol.org/files/firehol_level3.netset'
   # Add more URLs as needed
 )
 
