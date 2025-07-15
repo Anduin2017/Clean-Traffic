@@ -18,47 +18,7 @@ This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw i
 If you're really lazy and don't want to read this document, you can directly run the following commands. This will instantly boost the security of your server. (Note: it will change your firewall rules.)
 
 ```bash
-#!/usr/bin/env bash
-set -euo pipefail
-
-# $1 = Download URL
-# $2 = Target destination (e.g. /etc/ufw/after.init)
-# $3 = File mode (e.g. 0750)
-install_exe_file() {
-  local url=$1 dest=$2 mode=$3 tmp
-  echo "Installing $(basename "$dest") from $url → $dest (mode $mode)"
-  tmp=$(mktemp)
-  wget -qO "$tmp" "$url"
-  sudo install -m "$mode" "$tmp" "$dest"
-  rm -f "$tmp"
-}
-
-echo "Cleaning existing installation..."
-sudo rm -f /etc/ufw/after.init /etc/cron.daily/auto-blacklist-update || true
-
-echo "Installing dependencies..."
-sudo apt update
-sudo apt install -y ufw ipset curl wget
-
-echo "Installing Safe Server hook..."
-install_exe_file \
-  "https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init" \
-  /etc/ufw/after.init 0750
-sudo ufw reload
-
-echo "Installing auto-blacklist-update..."
-install_exe_file \
-  "https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/auto-blacklist-update" \
-  /etc/cron.daily/auto-blacklist-update 0755
-# 验证 cron.daily 脚本会被执行
-sudo run-parts --test /etc/cron.daily
-
-echo "Triggering first update…"
-sudo /etc/cron.daily/auto-blacklist-update
-
-echo "Safe Server status:"
-sudo /etc/ufw/after.init status
-
+curl -sL https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/install.sh | sudo bash
 ```
 
 ## Installation
