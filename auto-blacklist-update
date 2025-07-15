@@ -88,9 +88,11 @@ judge "Create temporary ipset"
 print_ok "Adding IPs to temporary ipset..."
 cnt=0
 for i in "${scrublist[@]}"; do
-  $ipset_exe add "$tmpsetname" "$i" && print_ok "Added $i to $tmpsetname" || print_warn "Failed to add $i to $tmpsetname"
+  $ipset_exe add "$tmpsetname" "$i" || print_warn "Failed to add $i to $tmpsetname"
   cnt=$((cnt+1))
 done
+
+print_ok "Added $cnt IPs to temporary ipset $tmpsetname"
 
 print_ok "Swap temporary ipset with $ipsetname..."
 $ipset_exe swap "$tmpsetname" "$ipsetname"
