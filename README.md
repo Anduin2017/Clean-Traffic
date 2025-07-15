@@ -18,40 +18,47 @@ This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw i
 If you're really lazy and don't want to read this document, you can directly run the following commands. This will instantly boost the security of your server. (Note: it will change your firewall rules.)
 
 ```bash
-echo "Cleaning existing installation"
-sudo rm -f /etc/ufw/after.init || echo "No previous installation found"
-sudo rm -f /etc/cron.daily/auto-blacklist-update || echo "No previous auto-blacklist-update found"
+#!/usr/bin/env bash
+set -euo pipefail
 
+# $1 = Download URL
+# $2 = Target destination (e.g. /etc/ufw/after.init)
+# $3 = File mode (e.g. 0750)
+install_exe_file() {
+  local url=$1 dest=$2 mode=$3 tmp
+  echo "Installing $(basename "$dest") from $url → $dest (mode $mode)"
+  tmp=$(mktemp)
+  wget -qO "$tmp" "$url"
+  sudo install -m "$mode" "$tmp" "$dest"
+  rm -f "$tmp"
+}
+
+echo "Cleaning existing installation..."
+sudo rm -f /etc/ufw/after.init /etc/cron.daily/auto-blacklist-update || true
+
+echo "Installing dependencies..."
 sudo apt update
-sudo apt install ipset ufw curl wget -y
+sudo apt install -y ufw ipset curl wget
 
-echo "Installing Safe Server"
-raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init"
-sudo wget -O after.init $raw
-sudo cp /etc/ufw/after.init /etc/ufw/after.init.orig
-sudo mv after.init /etc/ufw/after.init
-sudo chown root:root /etc/ufw/after.init
-sudo chmod 750 /etc/ufw/after.init
-echo "Safe Server installed"
+echo "Installing Safe Server hook..."
+install_exe_file \
+  "https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init" \
+  /etc/ufw/after.init 0750
+sudo ufw reload
 
-echo "Starting Safe Server"
-sudo /etc/ufw/after.init start
-echo "Safe Server started"
+echo "Installing auto-blacklist-update..."
+install_exe_file \
+  "https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/auto-blacklist-update" \
+  /etc/cron.daily/auto-blacklist-update 0755
+# 验证 cron.daily 脚本会被执行
+sudo run-parts --test /etc/cron.daily
 
-echo "Installing auto-blacklist-update"
-raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/auto-blacklist-update"
-sudo wget -O auto-blacklist-update $raw
-sudo mv auto-blacklist-update /etc/cron.daily/auto-blacklist-update
-sudo chown root:root /etc/cron.daily/auto-blacklist-update
-sudo chmod 755 /etc/cron.daily/auto-blacklist-update
-echo "auto-blacklist-update installed"
-
-echo "Updating blacklist.."
+echo "Triggering first update…"
 sudo /etc/cron.daily/auto-blacklist-update
-echo "blacklist updated"
 
-echo "Safe Server status"
+echo "Safe Server status:"
 sudo /etc/ufw/after.init status
+
 ```
 
 ## Installation
