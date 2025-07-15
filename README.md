@@ -18,12 +18,16 @@ This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw i
 If you're really lazy and don't want to read this document, you can directly run the following commands. This will instantly boost the security of your server. (Note: it will change your firewall rules.)
 
 ```bash
+echo "Cleaning existing installation"
+sudo rm -f /etc/ufw/after.init || echo "No previous installation found"
+sudo rm -f /etc/cron.daily/auto-blacklist-update || echo "No previous auto-blacklist-update found"
+
 sudo apt update
 sudo apt install ipset ufw curl wget -y
 
 echo "Installing Safe Server"
 raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init"
-wget -O after.init $raw
+sudo wget -O after.init $raw
 sudo cp /etc/ufw/after.init /etc/ufw/after.init.orig
 sudo mv after.init /etc/ufw/after.init
 sudo chown root:root /etc/ufw/after.init
@@ -36,7 +40,7 @@ echo "Safe Server started"
 
 echo "Installing auto-blacklist-update"
 raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/auto-blacklist-update"
-wget -O auto-blacklist-update $raw
+sudo wget -O auto-blacklist-update $raw
 sudo mv auto-blacklist-update /etc/cron.daily/auto-blacklist-update
 sudo chown root:root /etc/cron.daily/auto-blacklist-update
 sudo chmod 755 /etc/cron.daily/auto-blacklist-update
