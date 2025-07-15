@@ -19,7 +19,7 @@ If you're really lazy and don't want to read this document, you can directly run
 
 ```bash
 sudo apt update
-sudo apt install ipset ufw -y
+sudo apt install ipset ufw curl wget -y
 
 echo "Installing Safe Server"
 raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init"
