@@ -69,19 +69,16 @@ for url in "${ip_urls[@]}"; do
 done
 judge "Download and concatenate lists"
 
-# Remove duplicates
-print_ok "Removing duplicates..."
-rawlist=$(sort -u "$tmpfile")
-judge "Remove duplicates"
-
-print_ok "Removing temporary file..."
+print_ok "Parsing and sanitizing the list..."
+mapfile -t scrublist < <(
+  sort -u "$tmpfile" \
+    | sed -e 's/[[:space:]]*#.*//' \
+          -e 's/^[[:space:]]*//' \
+          -e 's/[[:space:]]*$//' \
+    | grep -E -v '^$'
+)
 rm -f "$tmpfile"
-judge "Remove temporary file"
-
-print_ok "Parsing the list..."
-declare -a scrublist
-readarray -t scrublist < <(echo "$rawlist")
-judge "Parse the list"
+judge "Parse and sanitize list"
 
 print_ok "Create temporary ipset..."
 tmpsetname="$(mktemp -u | cut -f2 -d'.')-tmp"
