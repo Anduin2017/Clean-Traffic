@@ -42,7 +42,7 @@ install_exe_file() {
   tmp=$(mktemp)
   wget -qO "$tmp" "$url"
   sudo install -m "$mode" "$tmp" "$dest"
-  judege "Install $(basename "$dest")"
+  judge "Install $(basename "$dest")"
 
   rm -f "$tmp"
   judge "$(basename "$dest") installed successfully"
