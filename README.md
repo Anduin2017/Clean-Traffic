@@ -113,37 +113,43 @@ By default, after installation and startup, there will be no blacklist, so no tr
 
 ## Manual Blacklist Management
 
-To view the list of active blacklisted entries, use the following command (note: this may produce a large amount of output):
+List blacklisted IP addresses:
 
 ```bash
 sudo ipset list ufw-blocklist-ipsum
 ```
 
-To avoid large outputs, use the terse option to view only the number of IPs in the blacklist:
+Show numbers of entries in the blacklist:
 
 ```bash
 sudo ipset list ufw-blocklist-ipsum -terse
 ```
 
-To check if a specific IP address is on the blacklist, use the following command:
+Check if an IP address is in the blacklist:
 
 ```bash
 sudo ipset test ufw-blocklist-ipsum a.b.c.d
 ```
 
-To manually add an IP address to the blacklist, directly edit `ipset`. Firewall changes take effect immediately, no restart is needed:
+To add an IP address to the blacklist, use the following command:
 
 ```bash
 sudo ipset add ufw-blocklist-ipsum a.b.c.d
 ```
 
-To remove an IP address from the blacklist, use the following command:
+It also supports CIDR notation, so you can add a range of IP addresses like this:
+
+```bash
+sudo ipset add ufw-blocklist-ipsum 123.345.0.0/16
+```
+
+Remove an IP address from the blacklist:
 
 ```bash
 sudo ipset del ufw-blocklist-ipsum a.b.c.d
 ```
 
-To completely clear the blacklist, use the following command:
+Clear the entire blacklist:
 
 ```bash
 sudo ipset flush ufw-blocklist-ipsum
@@ -156,27 +162,16 @@ Note: The blacklist is stored only in `ipset`, meaning in memory. Running `sudo 
 Manually updating the blacklist is obviously unrealistic and inefficient. By consuming some established IP blacklist databases, we can automate the blacklist update process. Fortunately, I have prepared this for you.
 
 ```bash
-raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/auto-blacklist-update"
-wget -O auto-blacklist-update $raw
-sudo mv auto-blacklist-update /etc/cron.daily/auto-blacklist-update
-sudo chown root:root /etc/cron.daily/auto-blacklist-update
-sudo chmod 755 /etc/cron.daily/auto-blacklist-update
-```
-
-After the above commands are executed, the file `/etc/cron.daily/auto-blacklist-update` will be created, which will run once a day to automatically update the blacklist.
-
-If you want to manually update the blacklist now, you can run the following command:
-
-```bash
 sudo /etc/cron.daily/auto-blacklist-update
 ```
 
-Note: This will only add new IP addresses to the blacklist. It will not delete old addresses or those manually added by you.
+If you want to manually update the blacklist now, you can run it directly.
 
 By default, it fetches blacklists from the following sources:
 
 * https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt
 * https://raw.githubusercontent.com/Anduin2017/ShameList-HackersIPs/master/list
+* https://iplists.firehol.org/files/firehol_level3.netset
 
 You can edit the `/etc/cron.daily/auto-blacklist-update` file to modify these sources.
 
