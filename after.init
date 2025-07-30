@@ -33,150 +33,122 @@ export IPSET_EXE="/sbin/ipset"
 }
 
 # Function to check if a chain exists (chain_exists ufw_blocklist_input && action if true || action if false)
-chain_exists()
-{   
-    [ $# -lt 1 -o $# -gt 2 ] && { 
-        echo "Usage: chain_exists <chain_name> [table]" >&2
-        return 1
-    }
-    local chain_name="$1" ; shift
-    [ $# -eq 1 ] && local table="--table $1"
-    iptables $table -n --list "$chain_name" >/dev/null 2>&1
-}
-
-# Function to check if an set exists (set_exists setname && action if true || action if false)
-set_exists()
-{   
-    [ $# -ne 1 ] && { 
-        echo "Usage: set_exists <set_name>" >&2
-        return 1
-    }
-    local set_name="$1"
-    ipset list "$set_name" -name >/dev/null 2>&1
-}
+chain_exists()    { iptables  -n --list "$1" >/dev/null 2>&1; }
+chain_exists_v6() { ip6tables -n --list "$1" >/dev/null 2>&1; }
+set_exists() { ipset list "$1" -name >/dev/null 2>&1; }
 
 case "$1" in
 start)
-    # Create an empty IPv4 blocklist
-    $IPSET_EXE create  $ipsetname hash:net -exist
-    $IPSET_EXE flush   $ipsetname
-
-    # Create an empty IPv6 blocklist
-    $IPSET_EXE create  $ip6setname hash:net family inet6 -exist
-    $IPSET_EXE flush   $ip6setname
-    
-    ## Insert firewall rules to take precedence, removing them and adding them back if they already existed
-    # Block inbound to localhost from blocklist
+    # Call start_v4 and start_v6 functions
+    /bin/bash "$0" start_v4
+    /bin/bash "$0" start_v6
+    ;;
+start_v4)
+    # --- IPv4 Setup ---
+    $IPSET_EXE create $ipsetname hash:net -exist && $IPSET_EXE flush $ipsetname
+    # INPUT
     if chain_exists ufw-blocklist-input; then
         iptables -D INPUT -m set --match-set $ipsetname src -j ufw-blocklist-input || true
-        iptables -F ufw-blocklist-input
-        iptables -X ufw-blocklist-input
+        iptables -F ufw-blocklist-input && iptables -X ufw-blocklist-input
     fi
     iptables -N ufw-blocklist-input
     iptables -A ufw-blocklist-input -j DROP -m comment --comment "ufw-blocklist-input"
-    iptables  -I INPUT -m set --match-set $ipsetname  src -j ufw-blocklist-input
-    ip6tables -I INPUT -m set --match-set $ip6setname src -j ufw-blocklist-input
-
-    # Log and drop outbound to blocklist. Hits here may indicate compromised localhost
+    iptables -I INPUT 1 -m set --match-set $ipsetname src -j ufw-blocklist-input
+    # OUTPUT
     if chain_exists ufw-blocklist-output; then
         iptables -D OUTPUT -m set --match-set $ipsetname dst -j ufw-blocklist-output || true
-        iptables -F ufw-blocklist-output
-        iptables -X ufw-blocklist-output
+        iptables -F ufw-blocklist-output && iptables -X ufw-blocklist-output
     fi
     iptables -N ufw-blocklist-output
     iptables -A ufw-blocklist-output -j LOG --log-level 3 --log-prefix "[UFW BLOCKLIST OUTPUT] " -m limit --limit 3/minute --limit-burst 10
     iptables -A ufw-blocklist-output -j DROP -m comment --comment "ufw-blocklist-output"
-    iptables  -I OUTPUT -m set --match-set $ipsetname  dst -j ufw-blocklist-output
-    ip6tables -I OUTPUT -m set --match-set $ip6setname dst -j ufw-blocklist-output
-
-    # Log and drop forwarding to blocklist. Hits here may indicate compromised internal hosts
+    iptables -I OUTPUT 1 -m set --match-set $ipsetname dst -j ufw-blocklist-output
+    # FORWARD
     if chain_exists ufw-blocklist-forward; then
         iptables -D FORWARD -m set --match-set $ipsetname dst -j ufw-blocklist-forward || true
-        iptables -F ufw-blocklist-forward
-        iptables -X ufw-blocklist-forward
+        iptables -F ufw-blocklist-forward && iptables -X ufw-blocklist-forward
     fi
     iptables -N ufw-blocklist-forward
     iptables -A ufw-blocklist-forward -j LOG --log-level 3 --log-prefix "[UFW BLOCKLIST FORWARD] " -m limit --limit 3/minute --limit-burst 10
     iptables -A ufw-blocklist-forward -j DROP -m comment --comment "ufw-blocklist-forward"
-    iptables  -I FORWARD -m set --match-set $ipsetname  dst -j ufw-blocklist-forward
-    ip6tables -I FORWARD -m set --match-set $ip6setname dst -j ufw-blocklist-forward
+    iptables -I FORWARD 1 -m set --match-set $ipsetname dst -j ufw-blocklist-forward
+    ;;
+start_v6)
+    # --- IPv6 Setup ---
+    $IPSET_EXE create $ip6setname hash:net family inet6 -exist && $IPSET_EXE flush $ip6setname
+    # INPUT
+    if chain_exists_v6 ufw-blocklist-input; then
+        ip6tables -D INPUT -m set --match-set $ip6setname src -j ufw-blocklist-input || true
+        ip6tables -F ufw-blocklist-input && ip6tables -X ufw-blocklist-input
+    fi
+    ip6tables -N ufw-blocklist-input
+    ip6tables -A ufw-blocklist-input -j DROP -m comment --comment "ufw-blocklist-input"
+    ip6tables -I INPUT 1 -m set --match-set $ip6setname src -j ufw-blocklist-input
+    # OUTPUT
+    if chain_exists_v6 ufw-blocklist-output; then
+        ip6tables -D OUTPUT -m set --match-set $ip6setname dst -j ufw-blocklist-output || true
+        ip6tables -F ufw-blocklist-output && ip6tables -X ufw-blocklist-output
+    fi
+    ip6tables -N ufw-blocklist-output
+    ip6tables -A ufw-blocklist-output -j LOG --log-level 3 --log-prefix "[UFW BLOCKLIST OUTPUT v6] " -m limit --limit 3/minute --limit-burst 10
+    ip6tables -A ufw-blocklist-output -j DROP -m comment --comment "ufw-blocklist-output"
+    ip6tables -I OUTPUT 1 -m set --match-set $ip6setname dst -j ufw-blocklist-output
+    # FORWARD
+    if chain_exists_v6 ufw-blocklist-forward; then
+        ip6tables -D FORWARD -m set --match-set $ip6setname dst -j ufw-blocklist-forward || true
+        ip6tables -F ufw-blocklist-forward && ip6tables -X ufw-blocklist-forward
+    fi
+    ip6tables -N ufw-blocklist-forward
+    ip6tables -A ufw-blocklist-forward -j LOG --log-level 3 --log-prefix "[UFW BLOCKLIST FORWARD v6] " -m limit --limit 3/minute --limit-burst 10
+    ip6tables -A ufw-blocklist-forward -j DROP -m comment --comment "ufw-blocklist-forward"
+    ip6tables -I FORWARD 1 -m set --match-set $ip6setname dst -j ufw-blocklist-forward
     ;;
 stop)
-    # delete resources created above
-    if chain_exists ufw-blocklist-input; then
-        # IPv4
-        iptables -D INPUT -m set --match-set $ipsetname src -j ufw-blocklist-input || true
-        iptables -F ufw-blocklist-input
-        iptables -X ufw-blocklist-input
-        # IPv6
-        ip6tables -D INPUT -m set --match-set $ip6setname src -j ufw-blocklist-input || true
-        ip6tables -F ufw-blocklist-input
-        ip6tables -X ufw-blocklist-input
-    fi
-    if chain_exists ufw-blocklist-output; then
-        # IPv4
-        iptables -D OUTPUT -m set --match-set $ipsetname dst -j ufw-blocklist-output || true
-        iptables -F ufw-blocklist-output
-        iptables -X ufw-blocklist-output
-        # IPv6
-        ip6tables -D OUTPUT -m set --match-set $ip6setname dst -j ufw-blocklist-output || true
-        ip6tables -F ufw-blocklist-output
-        ip6tables -X ufw-blocklist-output
-    fi
-    if chain_exists ufw-blocklist-forward; then
-        # IPv4
-        iptables -D FORWARD -m set --match-set $ipsetname dst -j ufw-blocklist-forward || true
-        iptables -F ufw-blocklist-forward
-        iptables -X ufw-blocklist-forward
-        # IPv6
-        ip6tables -D FORWARD -m set --match-set $ip6setname dst -j ufw-blocklist-forward || true
-        ip6tables -F ufw-blocklist-forward
-        ip6tables -X ufw-blocklist-forward
-    fi
-    if set_exists $ipsetname; then
-        # IPv4
-        $IPSET_EXE flush   $ipsetname
-        $IPSET_EXE destroy $ipsetname
-        # IPv6
-        $IPSET_EXE flush   $ip6setname
-        $IPSET_EXE destroy $ip6setname
-    fi
+    # --- IPv4 Teardown ---
+    if chain_exists ufw-blocklist-input; then iptables -D INPUT -m set --match-set $ipsetname src -j ufw-blocklist-input || true; fi
+    if chain_exists ufw-blocklist-output; then iptables -D OUTPUT -m set --match-set $ipsetname dst -j ufw-blocklist-output || true; fi
+    if chain_exists ufw-blocklist-forward; then iptables -D FORWARD -m set --match-set $ipsetname dst -j ufw-blocklist-forward || true; fi
+    if chain_exists ufw-blocklist-input; then iptables -F ufw-blocklist-input && iptables -X ufw-blocklist-input; fi
+    if chain_exists ufw-blocklist-output; then iptables -F ufw-blocklist-output && iptables -X ufw-blocklist-output; fi
+    if chain_exists ufw-blocklist-forward; then iptables -F ufw-blocklist-forward && iptables -X ufw-blocklist-forward; fi
+    if set_exists $ipsetname; then $IPSET_EXE destroy $ipsetname; fi
+
+    # --- IPv6 Teardown ---
+    if chain_exists_v6 ufw-blocklist-input; then ip6tables -D INPUT -m set --match-set $ip6setname src -j ufw-blocklist-input || true; fi
+    if chain_exists_v6 ufw-blocklist-output; then ip6tables -D OUTPUT -m set --match-set $ip6setname dst -j ufw-blocklist-output || true; fi
+    if chain_exists_v6 ufw-blocklist-forward; then ip6tables -D FORWARD -m set --match-set $ip6setname dst -j ufw-blocklist-forward || true; fi
+    if chain_exists_v6 ufw-blocklist-input; then ip6tables -F ufw-blocklist-input && ip6tables -X ufw-blocklist-input; fi
+    if chain_exists_v6 ufw-blocklist-output; then ip6tables -F ufw-blocklist-output && ip6tables -X ufw-blocklist-output; fi
+    if chain_exists_v6 ufw-blocklist-forward; then ip6tables -F ufw-blocklist-forward && ip6tables -X ufw-blocklist-forward; fi
+    if set_exists $ip6setname; then $IPSET_EXE destroy $ip6setname; fi
     ;;
 status)
-    # display details of the ipset
-    $IPSET_EXE list "$ipsetname" -t || echo "ipset $ipsetname not found. This is because the blocklist is not active."
-    # show iptables hit/byte counts
-    iptables -L -nvx | grep "$ipsetname" | grep 'match-set'
-    # show the last 100 lines from the logs
-    journalctl | grep -i blocklist | tail -n 100
-    ;;
-status-v6)
-    # display details of the ipset
-    $IPSET_EXE list "$ip6setname" -t || echo "ipset $ip6setname not found. This is because the blocklist is not active."
-    # show iptables hit/byte counts
-    ip6tables -L -nvx | grep "$ip6setname" | grep 'match-set'
-    # show the last 100 lines from the logs
+    echo "--- IPv4 Status ---"
+    $IPSET_EXE list "$ipsetname" -t || echo "ipset $ipsetname not found or not active."
+    iptables -L -nvx | grep --color=never "$ipsetname" | grep 'match-set'
+    
+    echo -e "\n--- IPv6 Status ---"
+    $IPSET_EXE list "$ip6setname" -t || echo "ipset $ip6setname not found or not active."
+    ip6tables -L -nvx | grep --color=never "$ip6setname" | grep 'match-set'
+
+    echo -e "\n--- Recent Log Entries ---"
     journalctl | grep -i blocklist | tail -n 100
     ;;
 flush-all)
-    # flush sets created above. Use /etc/cron.daily/ufw-blocklist-ipsum to repopulate
-    $IPSET_EXE flush  $ipsetname
-    $IPSET_EXE flush  $ip6setname
-    # reset iptables accounting
-    ipz=$( iptables -L INPUT -nvx --line-numbers | grep ufw-blocklist-input | awk '{print $1}')
-    iptables -Z INPUT "$ipz"
-    iptables -Z ufw-blocklist-input
-
-    ipz=$( iptables -L OUTPUT -nvx --line-numbers | grep ufw-blocklist-output | awk '{print $1}')
-    iptables -Z OUTPUT "$ipz"
-    iptables -Z ufw-blocklist-output
-
-    ipz=$( iptables -L FORWARD -nvx --line-numbers | grep ufw-blocklist-forward | awk '{print $1}')
-    iptables -Z FORWARD "$ipz"
-    iptables -Z ufw-blocklist-forward
+    echo "Flushing all blocklists and resetting counters..."
+    # IPv4
+    if set_exists $ipsetname; then $IPSET_EXE flush $ipsetname; fi
+    for chain in ufw-blocklist-input ufw-blocklist-output ufw-blocklist-forward; do
+        if chain_exists "$chain"; then iptables -Z "$chain"; fi
+    done
+    
+    # IPv6
+    if set_exists $ip6setname; then $IPSET_EXE flush $ip6setname; fi
+    for chain in ufw-blocklist-input ufw-blocklist-output ufw-blocklist-forward; do
+        if chain_exists_v6 "$chain"; then ip6tables -Z "$chain"; fi
+    done
     ;;
 *)
-    echo "'$1' not supported"
-    echo "Usage: /etc/ufw/after.init {start|stop|flush-all|status}"
+    echo "Usage: $0 {start|stop|status|flush-all}"
     ;;
 esac
