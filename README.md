@@ -9,7 +9,8 @@ This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw i
 * IP blacklist sourced from [IPsum](https://github.com/stamparm/ipsum)
 * ufw-blocklist has been tested on the following systems:
   * Armbian 22.05.3 Focal (based on Ubuntu 20.04.4 LTS (Focal Fossa))
-  * Ubuntu 22.04 LTS (Jammy Jellyfish)
+  * Ubuntu 22.04 LTS
+  * Ubuntu 24.04 LTS
 
 **This blacklist is highly effective at intercepting a significant amount of unsolicited traffic.** It is designed to be very lightweight and maintenance-free, as the initial target platform was a single-board computer running as a home internet gateway. After installation, no further write operations are made to the storage system to protect solid-state storage. I highly recommend this for any Ubuntu host with a public IP address or one exposed directly to the internet through port forwarding.
 
