@@ -93,20 +93,22 @@ $ipset_exe -q create "$tmpset_v6" hash:net family inet6 || print_warn "Failed to
 judge "Create temporary ipset"
 
 print_ok "Adding IPs to temporary ipset..."
-cnt=0
+cnt_v4=0
+cnt_v6=0
 for i in "${scrublist[@]}"; do
   #$ipset_exe add "$tmpsetname" "$i" || print_warn "Failed to add $i to $tmpsetname"
   if [[ "$i" == *:* ]]; then
     # IPv6 address
     $ipset_exe add "$tmpset_v6" "$i" || print_warn "Failed to add IPv6 $i to $tmpset_v6"
+    cnt_v6=$((cnt_v6+1))
   else
     # IPv4 address
     $ipset_exe add "$tmpset_v4" "$i" || print_warn "Failed to add IPv4 $i to $tmpset_v4"
+    cnt_v4=$((cnt_v4+1))
   fi
-  cnt=$((cnt+1))
 done
 
-print_ok "Added $cnt IPs to temporary ipset ${tmpset_v4} and $tmpset_v6"
+print_ok "Added $cntv4 IPv4 IPs and $cnt_v6 IPv6 IPs to temporary ipset ${tmpset_v4} and $tmpset_v6"
 
 print_ok "Swap temporary ipset with $ipsetname_v4 and $ipsetname_v6..."
 #$ipset_exe swap "$tmpsetname" "$ipsetname"
