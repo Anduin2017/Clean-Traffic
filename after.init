@@ -104,23 +104,42 @@ start)
 stop)
     # delete resources created above
     if chain_exists ufw-blocklist-input; then
+        # IPv4
         iptables -D INPUT -m set --match-set $ipsetname src -j ufw-blocklist-input || true
         iptables -F ufw-blocklist-input
         iptables -X ufw-blocklist-input
+        # IPv6
+        ip6tables -D INPUT -m set --match-set $ip6setname src -j ufw-blocklist-input || true
+        ip6tables -F ufw-blocklist-input
+        ip6tables -X ufw-blocklist-input
     fi
     if chain_exists ufw-blocklist-output; then
+        # IPv4
         iptables -D OUTPUT -m set --match-set $ipsetname dst -j ufw-blocklist-output || true
         iptables -F ufw-blocklist-output
         iptables -X ufw-blocklist-output
+        # IPv6
+        ip6tables -D OUTPUT -m set --match-set $ip6setname dst -j ufw-blocklist-output || true
+        ip6tables -F ufw-blocklist-output
+        ip6tables -X ufw-blocklist-output
     fi
     if chain_exists ufw-blocklist-forward; then
+        # IPv4
         iptables -D FORWARD -m set --match-set $ipsetname dst -j ufw-blocklist-forward || true
         iptables -F ufw-blocklist-forward
         iptables -X ufw-blocklist-forward
+        # IPv6
+        ip6tables -D FORWARD -m set --match-set $ip6setname dst -j ufw-blocklist-forward || true
+        ip6tables -F ufw-blocklist-forward
+        ip6tables -X ufw-blocklist-forward
     fi
     if set_exists $ipsetname; then
+        # IPv4
         $IPSET_EXE flush   $ipsetname
         $IPSET_EXE destroy $ipsetname
+        # IPv6
+        $IPSET_EXE flush   $ip6setname
+        $IPSET_EXE destroy $ip6setname
     fi
     ;;
 status)
@@ -131,9 +150,18 @@ status)
     # show the last 100 lines from the logs
     journalctl | grep -i blocklist | tail -n 100
     ;;
+status-v6)
+    # display details of the ipset
+    $IPSET_EXE list "$ip6setname" -t || echo "ipset $ip6setname not found. This is because the blocklist is not active."
+    # show iptables hit/byte counts
+    ip6tables -L -nvx | grep "$ip6setname" | grep 'match-set'
+    # show the last 100 lines from the logs
+    journalctl | grep -i blocklist | tail -n 100
+    ;;
 flush-all)
     # flush sets created above. Use /etc/cron.daily/ufw-blocklist-ipsum to repopulate
     $IPSET_EXE flush  $ipsetname
+    $IPSET_EXE flush  $ip6setname
     # reset iptables accounting
     ipz=$( iptables -L INPUT -nvx --line-numbers | grep ufw-blocklist-input | awk '{print $1}')
     iptables -Z INPUT "$ipz"
