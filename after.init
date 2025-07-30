@@ -149,6 +149,6 @@ flush-all)
     done
     ;;
 *)
-    echo "Usage: $0 {start|stop|status|flush-all}"
+    echo "Usage: $0 {start|start_v4|start_v6|stop|status|flush-all}"
     ;;
 esac
