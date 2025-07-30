@@ -110,10 +110,11 @@ done
 
 print_ok "Added $cnt_v4 IPv4 IPs and $cnt_v6 IPv6 IPs to temporary ipset ${tmpset_v4} and $tmpset_v6"
 
-print_ok "Swap temporary ipset with $ipsetname_v4 and $ipsetname_v6..."
-#$ipset_exe swap "$tmpsetname" "$ipsetname"
+print_ok "Swap temporary ipset with $ipsetname_v4..."
 $ipset_exe swap "$tmpset_v4" "$ipsetname_v4" || print_warn "Failed to swap $tmpset_v4 with $ipsetname_v4"
 judge "Swap temporary ipset with $ipsetname_v4"
+
+print_ok "Swap temporary ipset with $ipsetname_v6..."
 $ipset_exe swap "$tmpset_v6" "$ipsetname_v6" || print_warn "Failed to swap $tmpset_v6 with $ipsetname_v6"
 judge "Swap temporary ipset with $ipsetname_v6"
 
