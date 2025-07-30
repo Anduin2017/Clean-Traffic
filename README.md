@@ -1,13 +1,17 @@
 # Safe Server
 
+![Man hours](https://manhours.aiursoft.cn/r/gitlab.aiursoft.cn/anduin/safe-server.svg)
+
 This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw is a simple firewall configuration tool that acts as a front end for iptables).
 
 * Fully integrated into vanilla Ubuntu's ufw
 * Blocks inbound, outbound, and forwarded packets
 * Uses [Linux ipsets](https://ipset.netfilter.org/) for kernel-level performance
+* **Supports both IPv4 and IPv6 blacklists (single addresses and CIDR ranges)**
 * IP blacklist is refreshed daily
 * IP blacklist sourced from [IPsum](https://github.com/stamparm/ipsum)
 * ufw-blocklist has been tested on the following systems:
+
   * Armbian 22.05.3 Focal (based on Ubuntu 20.04.4 LTS (Focal Fossa))
   * Ubuntu 22.04 LTS
   * Ubuntu 24.04 LTS
@@ -74,6 +78,8 @@ By default, after installation and startup, there will be no blacklist, so no tr
 
 ## Manual Blacklist Management
 
+**IPv4**
+
 List blacklisted IP addresses:
 
 ```bash
@@ -86,35 +92,54 @@ Show numbers of entries in the blacklist:
 sudo ipset list ufw-blocklist-ipsum -terse
 ```
 
-Check if an IP address is in the blacklist:
+Check if an IPv4 address is in the blacklist:
 
 ```bash
 sudo ipset test ufw-blocklist-ipsum a.b.c.d
 ```
 
-To add an IP address to the blacklist, use the following command:
+**IPv6**
+
+List blacklisted IPv6 addresses and ranges:
 
 ```bash
-sudo ipset add ufw-blocklist-ipsum a.b.c.d
+sudo ipset list ufw-blocklist-ipsum-ipv6
 ```
 
-It also supports CIDR notation, so you can add a range of IP addresses like this:
+Show numbers of entries in the IPv6 blacklist:
 
 ```bash
-sudo ipset add ufw-blocklist-ipsum 123.345.0.0/16
+sudo ipset list ufw-blocklist-ipsum-ipv6 -terse
+```
+
+Check if an IPv6 address is in the blacklist:
+
+```bash
+sudo ipset test ufw-blocklist-ipsum-ipv6 240e:978:91f:1100::1
+```
+
+To add an IP address (v4 or v6) or CIDR range to the blacklist, use the following command:
+
+```bash
+sudo ipset add ufw-blocklist-ipsum 123.345.0.0/16      # IPv4 CIDR or single IPv4
+sudo ipset add ufw-blocklist-ipsum-ipv6 2001:db8::/32 # IPv6 CIDR or single IPv6
 ```
 
 Remove an IP address from the blacklist:
 
 ```bash
 sudo ipset del ufw-blocklist-ipsum a.b.c.d
+sudo ipset del ufw-blocklist-ipsum-ipv6 2001:db8::1
 ```
 
 Clear the entire blacklist:
 
 ```bash
 sudo ipset flush ufw-blocklist-ipsum
+sudo ipset flush ufw-blocklist-ipsum-ipv6
 ```
+
+> **CIDR Support**: You can block entire subnets using CIDR notation (e.g., `1.25.8.0/24` or `240e:978:91f:1100::/64`) to block a whole range of addresses at once.
 
 Note: The blacklist is stored only in `ipset`, meaning in memory. Running `sudo ufw reload` will reset the blacklist! Rebooting the server will also reset the blacklist!
 
@@ -130,9 +155,11 @@ If you want to manually update the blacklist now, you can run it directly.
 
 By default, it fetches blacklists from the following sources:
 
-* https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt
-* https://raw.githubusercontent.com/Anduin2017/ShameList-HackersIPs/master/list
-* https://iplists.firehol.org/files/firehol_level3.netset
+* [https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt](https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt)
+* [https://raw.githubusercontent.com/Anduin2017/ShameList-HackersIPs/master/list](https://raw.githubusercontent.com/Anduin2017/ShameList-HackersIPs/master/list)
+* [https://iplists.firehol.org/files/firehol\_level3.netset](https://iplists.firehol.org/files/firehol_level3.netset)
+
+**Note: The automatic update will refresh both the IPv4 (`ufw-blocklist-ipsum`) and IPv6 (`ufw-blocklist-ipsum-ipv6`) blacklist sets.**
 
 You can edit the `/etc/cron.daily/auto-blacklist-update` file to modify these sources.
 
@@ -151,7 +178,7 @@ sudo iptables -L INPUT -v --line-numbers
 Output may look like this: (I also use crowdsec-blacklists, which is not included in the default installation)
 
 | num | target                   | prot | opt | source   | destination | match-set                         |
-|-----|--------------------------|------|-----|----------|-------------|-----------------------------------|
+| --- | ------------------------ | ---- | --- | -------- | ----------- | --------------------------------- |
 | 1   | ufw-blocklist-input      | all  | --  | anywhere | anywhere    | match-set ufw-blocklist-ipsum src |
 | 2   | DROP                     | all  | --  | anywhere | anywhere    | match-set crowdsec-blacklists src |
 | 3   | ufw-before-logging-input | all  | --  | anywhere | anywhere    |                                   |
@@ -163,8 +190,8 @@ Output may look like this: (I also use crowdsec-blacklists, which is not include
 
 `after.init` has two commands: status and flush-all.
 
-* **status** displays the number of entries in the blacklist, the count of blocked packets, and the latest 100 log entries.
-* **flush-all** deletes all entries in the blacklist and resets the hit counters in iptables.
+* **status** displays the number of entries in the blacklist(s), the count of blocked packets, and the latest 100 log entries.
+* **flush-all** deletes all entries in the blacklist(s) and resets the hit counters in iptables.
 
 ```bash
 sudo /etc/ufw/after.init flush-all
@@ -174,6 +201,7 @@ Running the status option on `after.init` will display the current number of ent
 
 ```bash
 user@ubunturouter:~# sudo /etc/ufw/after.init status
+--- IPv4 Status ---
 Name: ufw-blocklist-ipsum
 Type: hash:net
 Revision: 6
@@ -184,10 +212,21 @@ Number of entries: 12789
    76998  4403836 ufw-blocklist-input  all  --  *      *       0.0.0.0/0            0.0.0.0/0            match-set ufw-blocklist-ipsum src
        4      160 ufw-blocklist-forward  all  --  *      *       0.0.0.0/0            0.0.0.0/0            match-set ufw-blocklist-ipsum dst
       11      868 ufw-blocklist-output  all  --  *      *       0.0.0.0/0            0.0.0.0/0            match-set ufw-blocklist-ipsum dst
-Sep 24 06:25:01 ubunturouter ufw-blocklist-ipsum[535172]: Started updating ufw-blocklist-ipsum using 12654 entries from https://raw.githubusercontent.com/stamparm/ipsum/master/levels/3.txt
-Sep 24 06:26:02 ubunturouter ufw-blocklist-ipsum[547387]: Finished updating ufw-blocklist-ipsum. Old number of entries: 12654 New number of entries: 12181, Total: 12181
-...
-```
 
-* DROP rules in OUTPUT or FORWARD may indicate internal hosts having issues and log the events. The status example above shows that the FORWARD rule hits are related to internal torrent clients.
-* INPUT hits do not log events. The above status output shows **76998 dropped INPUT packets** after 9 days and 22:45 hours of operation
+--- IPv6 Status ---
+Name: ufw-blocklist-ipsum-ipv6
+Type: hash:net
+Revision: 6
+Header: family inet6 hashsize 1024 maxelem 65536
+Size in memory: 1312
+References: 3
+Number of entries: 512
+   1024   65536 ufw-blocklist-input      all      *      *       ::/0                 ::/0                 match-set ufw-blocklist-ipsum-ipv6 src
+    256    16384 ufw-blocklist-forward    all      *      *       ::/0                 ::/0                 match-set ufw-blocklist-ipsum-ipv6 dst
+    512   32768 ufw-blocklist-output     all      *      *       ::/0                 ::/0                 match-set ufw-blocklist-ipsum-ipv6 dst
+
+--- Recent Log Entries ---
+Sep 24 06:25:01 ubunturouter ufw-blocklist-ipv6[535172]: Started updating ufw-blocklist-ipsum-ipv6 using 512 entries from IPv6 sources
+Sep 24 06:26:02 ubunturouter ufw-blocklist-ipsum[547387]: Finished updating both IPv4 and IPv6 sets."
+javascript:void(0)
+```
