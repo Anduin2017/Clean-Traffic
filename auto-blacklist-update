@@ -108,7 +108,7 @@ for i in "${scrublist[@]}"; do
   fi
 done
 
-print_ok "Added $cntv4 IPv4 IPs and $cnt_v6 IPv6 IPs to temporary ipset ${tmpset_v4} and $tmpset_v6"
+print_ok "Added $cnt_v4 IPv4 IPs and $cnt_v6 IPv6 IPs to temporary ipset ${tmpset_v4} and $tmpset_v6"
 
 print_ok "Swap temporary ipset with $ipsetname_v4 and $ipsetname_v6..."
 #$ipset_exe swap "$tmpsetname" "$ipsetname"
