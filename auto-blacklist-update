@@ -51,7 +51,8 @@ ip_urls=(
   # Add more URLs as needed
 )
 
-ipsetname=ufw-blocklist-ipsum
+ipsetname_v4=ufw-blocklist-ipsum
+ipsetname_v6=ufw-blocklist-ipsum-ipv6
 ipset_exe=/usr/sbin/ipset
 tmpfile=$(mktemp)
 
@@ -88,7 +89,14 @@ judge "Create temporary ipset"
 print_ok "Adding IPs to temporary ipset..."
 cnt=0
 for i in "${scrublist[@]}"; do
-  $ipset_exe add "$tmpsetname" "$i" || print_warn "Failed to add $i to $tmpsetname"
+  #$ipset_exe add "$tmpsetname" "$i" || print_warn "Failed to add $i to $tmpsetname"
+  if [[ "$i" == *:* ]]; then
+    # IPv6 address
+    $ipset_exe add "$tmpsetname" "$i" || print_warn "Failed to add IPv6 $i to $tmpsetname"
+  else
+    # IPv4 address
+    $ipset_exe add "$tmpsetname" "$i" || print_warn "Failed to add IPv4 $i to $tmpsetname"
+  fi
   cnt=$((cnt+1))
 done
 
