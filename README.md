@@ -19,15 +19,19 @@ This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw i
 
 ## Simplified Installation
 
-If you're really lazy and don't want to read this document, you can directly run the following commands. This will instantly boost the security of your server. (Note: it will change your firewall rules.)
+If you're really lazy and don't want to read this document, you can directly run the following commands. This will instantly boost the security of your server.
+
+* It change the ufw `after.init` script to include the safe-server.
+* It creates a cron job that automatically updates the blacklist every day.
+* It will initialize the blacklist with some common IPs that are known to be malicious.
 
 ```bash
 curl -sL https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/install.sh | sudo bash
 ```
 
-## Installation
+## Manual Installation (For advanced users)
 
-Install the ipset package:
+Install the ipset package first:
 
 ```bash
 sudo apt update
