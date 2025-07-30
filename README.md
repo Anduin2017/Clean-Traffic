@@ -10,8 +10,7 @@ This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw i
 * **Supports both IPv4 and IPv6 blacklists (single addresses and CIDR ranges)**
 * IP blacklist is refreshed daily
 * IP blacklist sourced from [IPsum](https://github.com/stamparm/ipsum)
-* ufw-blocklist has been tested on the following systems:
-
+* safe-server has been tested on the following systems:
   * Armbian 22.05.3 Focal (based on Ubuntu 20.04.4 LTS (Focal Fossa))
   * Ubuntu 22.04 LTS
   * Ubuntu 24.04 LTS
