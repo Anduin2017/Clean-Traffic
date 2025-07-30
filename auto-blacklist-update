@@ -86,8 +86,8 @@ print_ok "Create temporary ipset..."
 # tmpsetname="$(mktemp -u | cut -f2 -d'.')-tmp"
 # $ipset_exe -q create "$tmpsetname" hash:net
 RANDOM=$$  # Seed random number generator with process ID
-tmpset_v4="$ipsetname_v4-tmp-$RANDOM"
-tmpset_v6="$ipsetname_v6-tmp-$RANDOM"
+tmpset_v4="tmp-v4-$(mktemp -u XXXXXX)"
+tmpset_v6="tmp-v6-$(mktemp -u XXXXXX)"
 $ipset_exe -q create "$tmpset_v4" hash:net              || print_warn "Failed to create temporary ipset $tmpset_v4"
 $ipset_exe -q create "$tmpset_v6" hash:net family inet6 || print_warn "Failed to create temporary ipset $tmpset_v6"
 judge "Create temporary ipset"
