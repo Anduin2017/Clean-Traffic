@@ -1,4 +1,4 @@
-# Safe Server
+# Clean-Traffic
 
 ![Man hours](https://manhours.aiursoft.cn/r/gitlab.aiursoft.cn/anduin/clean-traffic.svg)
 
@@ -52,26 +52,26 @@ wget -O after.init $raw
 sudo mv after.init /etc/ufw/after.init
 sudo chown root:root /etc/ufw/after.init
 sudo chmod 750 /etc/ufw/after.init
-echo "Safe Server installed"
+echo "Clean-Traffic installed"
 ```
 
 The above commands are idempotent, meaning they can be run repeatedly. Running it again will update clean-traffic.
 
-## Starting Safe Server
+## Starting Clean-Traffic
 
-Start Safe Server:
+Start Clean-Traffic:
 
 ```bash
 sudo /etc/ufw/after.init start
 ```
 
-Stop Safe Server:
+Stop Clean-Traffic:
 
 ```bash
 sudo /etc/ufw/after.init stop
 ```
 
-Check the status of Safe Server:
+Check the status of Clean-Traffic:
 
 ```bash
 sudo /etc/ufw/after.init status
