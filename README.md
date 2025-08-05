@@ -1,6 +1,6 @@
 # Safe Server
 
-![Man hours](https://manhours.aiursoft.cn/r/gitlab.aiursoft.cn/anduin/safe-server.svg)
+![Man hours](https://manhours.aiursoft.cn/r/gitlab.aiursoft.cn/anduin/clean-traffic.svg)
 
 This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw is a simple firewall configuration tool that acts as a front end for iptables).
 
@@ -10,7 +10,7 @@ This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw i
 * **Supports both IPv4 and IPv6 blacklists (single addresses and CIDR ranges)**
 * IP blacklist is refreshed daily
 * IP blacklist sourced from [IPsum](https://github.com/stamparm/ipsum)
-* safe-server has been tested on the following systems:
+* clean-traffic has been tested on the following systems:
   * Armbian 22.05.3 Focal (based on Ubuntu 20.04.4 LTS (Focal Fossa))
   * Ubuntu 22.04 LTS
   * Ubuntu 24.04 LTS
@@ -21,12 +21,12 @@ This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw i
 
 If you're really lazy and don't want to read this document, you can directly run the following commands. This will instantly boost the security of your server.
 
-* It change the ufw `after.init` script to include the safe-server.
+* It change the ufw `after.init` script to include the clean-traffic.
 * It creates a cron job that automatically updates the blacklist every day.
 * It will initialize the blacklist with some common IPs that are known to be malicious.
 
 ```bash
-curl -sL https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/install.sh | sudo bash
+curl -sL https://gitlab.aiursoft.cn/anduin/clean-traffic/-/raw/master/install.sh | sudo bash
 ```
 
 ## Manual Installation (For advanced users)
@@ -47,7 +47,7 @@ sudo cp /etc/ufw/after.init /etc/ufw/after.init.orig
 Install the ufw-blocklist file:
 
 ```bash
-raw="https://gitlab.aiursoft.cn/anduin/safe-server/-/raw/master/after.init"
+raw="https://gitlab.aiursoft.cn/anduin/clean-traffic/-/raw/master/after.init"
 wget -O after.init $raw
 sudo mv after.init /etc/ufw/after.init
 sudo chown root:root /etc/ufw/after.init
@@ -55,7 +55,7 @@ sudo chmod 750 /etc/ufw/after.init
 echo "Safe Server installed"
 ```
 
-The above commands are idempotent, meaning they can be run repeatedly. Running it again will update safe-server.
+The above commands are idempotent, meaning they can be run repeatedly. Running it again will update clean-traffic.
 
 ## Starting Safe Server
 
