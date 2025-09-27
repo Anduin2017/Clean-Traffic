@@ -57,7 +57,7 @@ sudo apt update
 sudo apt install -y ufw ipset curl wget
 judge "Install dependencies"
 
-print_ok "Installing Safe Server hook..."
+print_ok "Installing Clean-Traffic hook..."
 install_exe_file \
   "https://gitlab.aiursoft.cn/anduin/clean-traffic/-/raw/master/after.init" \
   /etc/ufw/after.init 0750
@@ -77,6 +77,6 @@ print_ok "Triggering first update…"
 sudo /etc/cron.daily/auto-blacklist-update
 judge "Initial blacklist update"
 
-print_ok "Safe Server status:"
+print_ok "Clean-Traffic status:"
 sudo /etc/ufw/after.init status
-judge "Check Safe Server status"
+judge "Check Clean-Traffic status"
