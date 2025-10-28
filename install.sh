@@ -59,13 +59,13 @@ judge "Install dependencies"
 
 print_ok "Installing Clean-Traffic hook..."
 install_exe_file \
-  "https://gitlab.aiursoft.cn/anduin/clean-traffic/-/raw/master/after.init" \
+  "https://gitlab.aiursoft.com/anduin/clean-traffic/-/raw/master/after.init" \
   /etc/ufw/after.init 0750
 sudo ufw reload
 
 print_ok "Installing auto-blacklist-update..."
 install_exe_file \
-  "https://gitlab.aiursoft.cn/anduin/clean-traffic/-/raw/master/auto-blacklist-update" \
+  "https://gitlab.aiursoft.com/anduin/clean-traffic/-/raw/master/auto-blacklist-update" \
   /etc/cron.daily/auto-blacklist-update 0755
 # 验证 cron.daily 脚本会被执行
 
