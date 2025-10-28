@@ -1,6 +1,6 @@
 # Clean-Traffic
 
-![Man hours](https://manhours.aiursoft.cn/r/gitlab.aiursoft.com/anduin/clean-traffic.svg)
+![Man hours](https://manhours.aiursoft.com/r/gitlab.aiursoft.com/anduin/clean-traffic.svg)
 
 This project protects your Ubuntu server by adding an IP blacklist to ufw (ufw is a simple firewall configuration tool that acts as a front end for iptables).
 
